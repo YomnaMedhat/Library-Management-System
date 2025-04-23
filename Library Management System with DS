@@ -1,0 +1,542 @@
+#include <iostream>
+using namespace std;
+
+class Book {
+protected:
+    string title;
+    string author;
+    int ISBN;
+
+public:
+    Book(string t, string a, int no) : title(t), author(a), ISBN(no) {}
+
+    string getTitle() {
+        return title;
+    }
+    string getAuthor() {
+        return author;
+    }
+    int getISBN() {
+        return ISBN;
+    }
+
+    void displayBook() {
+        cout << "Title: " << title << "\nAuthor: " << author << "\nISBN: " << ISBN << endl;
+    }
+};
+
+/*------------------------------------------------------- FICTION CLASS ---------------------------------------------------------*/
+
+class Fiction : public Book {
+public:
+    Fiction(string tF, string aF, int noF) : Book(tF, aF, noF) {}
+
+    void displayBook() {
+        cout << "Fiction: ";
+        Book::displayBook();
+    }
+};
+
+class FictionNode {
+public:
+    Book* data;
+    FictionNode* next;
+
+    FictionNode(Book* book) : data(book), next(NULL) {}
+};
+
+class FictionList {
+private:
+    FictionNode* head;
+
+public:
+    FictionList() : head(NULL) {}
+
+    void addBook(Book* book) {
+        FictionNode* newNode = new FictionNode();
+        newNode->next = head;
+        head = newNode;
+    }
+
+    void removeBook(int isbn) {
+        FictionNode* current = head;
+        FictionNode* previous = NULL;
+
+        while(current != NULL && current->data->getISBN() != isbn) {
+            previous = current;
+            current = current->next;
+        }
+
+        if(current == NULL) {
+            cout << "Book with ISBN " << isbn << " not found\n";
+            return;
+        }
+
+        if(previous == NULL) {
+            head = current->next;
+        }
+        else {
+            previous->next = current->next;
+        }
+
+        delete current->data;
+        delete current;
+        cout << "Book with ISBN " << isbn << " removed\n";
+    }
+
+    Book* searchBook(int isbn = 0) {
+        FictionNode* current = head;
+
+        while(current != NULL) {
+            if((isbn != 0 && current->data->getISBN() == isbn)) {
+                return current->data;
+            }
+            current = current->next;
+        }
+
+        cout << "Book not found in fiction books\n";
+        return NULL;
+    }
+
+    void display() {
+        if(head == NULL) {
+            cout << "Fiction list is empty\n";
+            return;
+        }
+
+        cout << "Fiction Books:\n";
+        FictionNode* current = head;
+        while(current != NULL) {
+            current->data->displayBook();
+            current = current->next;
+        }
+    }
+};
+
+/*------------------------------------------------------- NONFICTION CLASS ------------------------------------------------------*/
+
+class NonFiction : public Book {
+public:
+    NonFiction(string tN, string aN, int noN) : Book(tN, aN, noN) {}
+
+    void displayBook() {
+        cout << "Non Fiction: ";
+        Book::displayBook();
+    }
+};
+
+class NonFictionNode {
+public:
+    Book* data;
+    NonFictionNode* prev;
+    NonFictionNode* next;
+
+    NonFictionNode(Book* book) : data(book), prev(NULL), next(NULL) {}
+};
+
+class NonFictionList {
+private:
+    NonFictionNode* head;
+
+public:
+    NonFictionList() : head(NULL) {}
+
+    void addBook(Book* book) {
+        NonFictionNode* newNode = new NonFictionNode(book);
+        newNode->next = head;
+
+        if(head != NULL) {
+            head->prev = newNode;
+        }
+
+        head = newNode;
+    }
+
+    void removeBook(int isbn) {
+        NonFictionNode* current = head;
+
+        while(current != NULL && current->data->getISBN() != isbn) {
+            current = current->next;
+        }
+
+        if(current == NULL) {
+            cout << "Book with ISBN " << isbn << " not found\n";
+            return;
+        }
+
+        if(current->prev != NULL) {
+            current->prev->next = current->next;
+        }
+        else {
+            head = current->next;
+        }
+
+        if(current->next != NULL) {
+            current->next->prev = current->prev;
+        }
+
+        delete current->data;
+        delete current;
+        cout << "Book with ISBN " << isbn << " removed\n";
+    }
+
+    Book* searchBook(int isbn = 0) {
+        NonFictionNode* current = head;
+
+        while(current != NULL) {
+            if((isbn != 0 && current->data->getISBN() == isbn)) {
+                return current->data;
+            }
+            current = current->next;
+        }
+
+        cout << "Book not found in non fiction books\n";
+        return NULL;
+    }
+
+    void display() {
+        if(head == NULL) {
+            cout << "Non-Fiction list is empty\n";
+            return;
+        }
+
+        cout << "Non-Fiction Books:\n";
+        NonFictionNode* current = head;
+        while(current != NULL) {
+            current->data->displayBook();
+            current = current->next;
+        }
+    }
+};
+
+/*--------------------------------------------------------- STACK CLASS ---------------------------------------------------------*/
+
+class StackNode {
+public:
+    Book* data;
+    StackNode* next;
+
+    StackNode(Book* book) : data(book), next(NULL) {}
+};
+
+class RecentlyAddedStack {
+private:
+    StackNode* top;
+    int size;
+    const int max = 5;
+
+public:
+    RecentlyAddedStack() : top(NULL), size(0) {}
+
+    void pushBook(Book* book) {
+        if(size == max) {
+            StackNode* current = top;
+            StackNode* previous = NULL;
+            while(current->next != NULL) {
+                previous = current;
+                current = current->next;
+            }
+            if(previous != NULL) {
+                previous->next = NULL;
+            }
+            else {
+                top = NULL;
+            }
+            delete current;
+            size--;
+        }
+
+        StackNode* newNode = new StackNode(book);
+        newNode->next = top;
+        top = newNode;
+        size++;
+    }
+
+    void popBook() {
+        if(top == NULL) {
+            cout << "Empty\n";
+            return;
+        }
+
+        StackNode* temp = top;
+        top = top->next;
+        delete temp;
+        size--;
+    }
+
+    void displayRecentBooks() {
+        if(top == NULL) {
+            cout << "No recent books\n";
+            return;
+        }
+
+        cout << "Recently Added Books:\n";
+        StackNode* current = top;
+        while(current != NULL) {
+            current->data->displayBook();
+            current = current->next;
+        }
+    }
+};
+
+/*--------------------------------------------------------- QUEUE CLASS ---------------------------------------------------------*/
+
+class QueueNode {
+public:
+    Book* data;
+    QueueNode* next;
+
+    QueueNode(Book* book) : data(book), next(NULL) {}
+};
+
+class BorrowQueue {
+private:
+    QueueNode* front;
+    QueueNode* rear;
+    int size;
+    const int max = 10;
+
+public:
+    BorrowQueue() : front(NULL), rear(NULL), size(0) {}
+
+    void enqueueBook(Book* book) {
+        QueueNode* newNode = new QueueNode(book);
+
+        if(size == max) {
+            QueueNode* temp = front;
+            front = front->next;
+            delete temp;
+            size--;
+        }
+
+        if(rear == NULL) {
+            front = rear = newNode;
+        }
+        else {
+            rear->next = newNode;
+            rear = newNode;
+        }
+        size++;
+    }
+
+    void dequeueBook() {
+        if(front == NULL) {
+            cout << "Empty\n";
+            return;
+        }
+
+        QueueNode* temp = front;
+        front = front->next;
+        if(front == NULL) {
+            rear = NULL;
+        }
+        delete temp;
+        size--;
+    }
+
+    void displayBorrowedBooks() {
+        if(front == NULL) {
+            cout << "No borrowing history\n";
+            return;
+        }
+
+        cout << "Borrowing History:\n";
+        QueueNode* current = front;
+        while(current != NULL) {
+            current->data->displayBook();
+            current = current->next;
+        }
+    }
+};
+
+/*------------------------------------------------------- LIBRARY CLASS ---------------------------------------------------------*/
+
+class Library {
+private:
+    FictionList fictionList;
+    NonFictionList nonFictionList;
+    RecentlyAddedStack recentStack;
+    BorrowQueue borrowQueue;
+
+public:
+    void addFiction(string title, string author, int isbn) {
+        Fiction* newBook = new Fiction(title, author, isbn);
+        fictionList.addBook(newBook);
+        recentStack.pushBook(newBook);
+    }
+
+    void addNonFiction(string title, string author, int isbn) {
+        NonFiction* newBook = new NonFiction(title, author, isbn);
+        nonFictionList.addBook(newBook);
+        recentStack.pushBook(newBook);
+    }
+
+    void displayFiction() {
+        fictionList.display();
+    }
+
+    void displayNonFiction() {
+        nonFictionList.display();
+    }
+
+    void searchFiction(int isbn) {
+        Book* book = fictionList.searchBook(isbn);
+        if(book) {
+            book->displayBook();
+        }
+    }
+
+    void searchNonFiction(int isbn) {
+        Book* book = nonFictionList.searchBook(isbn);
+        if(book) {
+            book->displayBook();
+        }
+    }
+
+    void removeFiction(int isbn) {
+        fictionList.removeBook(isbn);
+    }
+
+    void removeNonFiction(int isbn) {
+        nonFictionList.removeBook(isbn);
+    }
+
+    void borrowBook(int isbn) {
+        Book* borrowedBook = fictionList.searchBook("", isbn);
+        if(borrowedBook != NULL) {
+            borrowQueue.enqueueBook(borrowedBook);
+            fictionList.removeBook(isbn);
+            return;
+        }
+
+        borrowedBook = nonFictionList.searchBook("", isbn);
+        if(borrowedBook != NULL) {
+            borrowQueue.enqueueBook(borrowedBook);
+            nonFictionList.removeBook(isbn);
+        }
+    }
+
+    void displayRecentlyAdded() {
+        recentStack.displayRecentBooks();
+    }
+
+    void displayBorrowHistory() {
+        borrowQueue.displayBorrowedBooks();
+    }
+};
+
+/*------------------------------------------------------- MAIN FUNCTION ---------------------------------------------------------*/
+
+int main() {
+    Library library;
+    int choice;
+
+    while(true) {
+        cout << "\nLibrary Menu:\n";
+        cout << "1. Add Fiction Book\n";
+        cout << "2. Add Non-Fiction Book\n";
+        cout << "3. Display Fiction Books\n";
+        cout << "4. Display Non-Fiction Books\n";
+        cout << "5. Search Fiction Book\n";
+        cout << "6. Search Non-Fiction Book\n";
+        cout << "7. Remove Fiction Book\n";
+        cout << "8. Remove Non-Fiction Book\n";
+        cout << "9. Borrow a Book\n";
+        cout << "10. Display Recently Added Books\n";
+        cout << "11. Display Borrowing History\n";
+        cout << "12. Exit\n";
+        cout << "Enter your choice: ";
+        cin >> choice;
+        cout << "========================================\n";
+
+        if(choice == 12) break;
+
+        string title, author;
+        int isbn;
+
+        switch(choice) {
+        case 1:
+            cout << "Enter Fiction Book Title: ";
+            cin >> title;
+            cout << "Enter Author: ";
+            cin >> author;
+            cout << "Enter ISBN: ";
+            cin >> isbn;
+            library.addFiction(title, author, isbn);
+            cout << "========================================\n";
+            break;
+
+        case 2:
+            cout << "Enter Non-Fiction Book Title: ";
+            cin >> title;
+            cout << "Enter Author: ";
+            cin >> author;
+            cout << "Enter ISBN: ";
+            cin >> isbn;
+            library.addNonFiction(title, author, isbn);
+            cout << "========================================\n";
+            break;
+
+        case 3:
+            library.displayFiction();
+            cout << "========================================\n";
+            break;
+
+        case 4:
+            library.displayNonFiction();
+            cout << "========================================\n";
+            break;
+
+        case 5:
+            cout << "Enter ISBN: ";
+            cin >> isbn;
+            library.searchFiction(isbn);
+            cout << "========================================\n";
+            break;
+
+        case 6:
+            cout << "Enter ISBN: ";
+            cin >> isbn;
+            library.searchNonFiction(isbn);
+            cout << "========================================\n";
+            break;
+
+        case 7:
+            cout << "Enter Fiction Book ISBN to Remove: ";
+            cin >> isbn;
+            library.removeFiction(isbn);
+            cout << "========================================\n";
+            break;
+
+        case 8:
+            cout << "Enter Non-Fiction Book ISBN to Remove: ";
+            cin >> isbn;
+            library.removeNonFiction(isbn);
+            cout << "========================================\n";
+            break;
+
+        case 9:
+            cout << "Enter ISBN to Borrow: ";
+            cin >> isbn;
+            library.borrowBook(isbn);
+            cout << "========================================\n";
+            break;
+
+        case 10:
+            library.displayRecentlyAdded();
+            cout << "========================================\n";
+            break;
+
+        case 11:
+            library.displayBorrowHistory();
+            cout << "========================================\n";
+            break;
+
+        default:
+            cout << "Invalid choice\n";
+            cout << "========================================\n";
+        }
+    }
+
+    return 0;
+}
